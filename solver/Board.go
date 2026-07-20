@@ -149,13 +149,13 @@ func (b *board) clearFloating(pos int, value uint32) cell {
 
 func (b *board) _writeBoard(pos int, c cell) cell {
 	if board_SAFE_MODE {
-		cellCheck, errCode := c.isValid()
-		if cellCheck {
+		cellValid, errCode := c.isValid()
+		if !cellValid {
 			throw(invalidMoveException{pos, c.bits, []string{fmt.Sprintf("Cell error: %d", errCode)}})
 		}
 		b.board[pos] = c
 		board_errors := b._isValid()
-		if len(board_errors) == 0 {
+		if len(board_errors) > 0 {
 			throw(invalidMoveException{pos, c.bits, board_errors})
 		}
 	} else {

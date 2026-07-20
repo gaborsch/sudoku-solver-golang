@@ -1,6 +1,9 @@
 package solver
 
-import "math/bits"
+import (
+	"fmt"
+	"math/bits"
+)
 
 /*
  * 00000000 000000FF FFFFFFFX VVVVCCCC
@@ -97,21 +100,27 @@ func (c cell) setFloating(value uint32) cell {
 func (c cell) isValid() (bool, int) {
 	if c.bits != (c.bits & 0x3ffff) {
 		// surplus bits
+		fmt.Printf("Not valid cell 1: surplus bits %8x \n", c.bits)
 		return false, 1
 	} else if ((c.bits & cell_MASK_FIXED) == cell_MASK_FIXED) && ((c.bits & cell_MASK_FLOATING) > 0) {
 		// if fixed cannot contain floating
+		fmt.Printf("Not valid cell 2: fixed cannot contain floating %8x \n", c.bits)
 		return false, 2
 	} else if ((c.bits & cell_MASK_FIXED) == cell_MASK_FIXED) && ((c.bits & cell_MASK_VALUE) == 0) {
 		// if fixed, must contain value
+		fmt.Printf("Not valid cell 3: fixed must contain value %8x \n", c.bits)
 		return false, 3
 	} else if ((c.bits & cell_MASK_FIXED) == 0) && ((c.bits & cell_MASK_FLOATING) == 0) {
 		// if not fixed, must contain floating
+		fmt.Printf("Not valid cell 4: not fixed must contain floating %8x \n", c.bits)
 		return false, 4
 	} else if ((c.bits & cell_MASK_FIXED) == 0) && ((c.bits & cell_MASK_VALUE) > 0) {
 		// if not fixed, must not contain value
+		fmt.Printf("Not valid cell 5: not fixed must not contain value %8x \n", c.bits)
 		return false, 5
 	} else if ((c.bits & cell_MASK_FIXED) == 0) && (bits.OnesCount32(c.bits&cell_MASK_FLOATING) != (int)(c.bits&cell_MASK_COUNT)) {
 		// if not fixed, floating count must equal to the bits
+		fmt.Printf("Not valid cell 9:  if not fixed, floating count must equal to the bits %8x \n", c.bits)
 		return false, 9
 
 	}

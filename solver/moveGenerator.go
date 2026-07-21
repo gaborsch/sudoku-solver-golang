@@ -1,13 +1,13 @@
 package solver
 
-type moveGenerator struct {
-	state *state
+type MoveGenerator struct {
+	state *State
 }
 
-func new_moveGenerator(s *state) *moveGenerator {
-	return &moveGenerator{s}
+func new_moveGenerator(s *State) *MoveGenerator {
+	return &MoveGenerator{s}
 }
 
-func (g *moveGenerator) generateMoves() {
+func (g *MoveGenerator) generateMoves() {
 
 }

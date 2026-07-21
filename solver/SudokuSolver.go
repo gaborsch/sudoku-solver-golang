@@ -6,7 +6,7 @@ import (
 )
 
 type SudokuSolver struct {
-	state          *state
+	state          *State
 	logInfo        bool
 	logTrace       bool
 	processedMoves []Move
@@ -34,7 +34,7 @@ func (s *SudokuSolver) AddMoves(moves []Move) {
 	s.state.addMoves(moves)
 }
 
-func (s *SudokuSolver) Solve() *board {
+func (s *SudokuSolver) Solve() *Board {
 	var boardHash int = 0
 	loop := true
 	for loop {
@@ -125,12 +125,12 @@ func (s *SudokuSolver) Solve() *board {
 	}
 */
 
-func (s *SudokuSolver) _doInitValue(b *board, m *Move) {
+func (s *SudokuSolver) _doInitValue(b *Board, m *Move) {
 	b.setFixedValue(int(m.pos), uint32(m.value))
 	s.state.addMove(move_setValue(m.pos, m.value, "Initial check"))
 }
 
-func (s *SudokuSolver) _doSetValue(b *board, m *Move) {
+func (s *SudokuSolver) _doSetValue(b *Board, m *Move) {
 	b.setFixedValue(int(m.pos), uint32(m.value))
 	rn := m.getRowNum()
 	s._setClearFloatsTo(b, board_getRowPositions(rn), b.getRowValues(rn), uint32(m.value), "clearing "+m.getRowCoord()+" for "+m.getCoords())
@@ -141,7 +141,7 @@ func (s *SudokuSolver) _doSetValue(b *board, m *Move) {
 
 }
 
-func (s *SudokuSolver) _setClearFloatsTo(b *board, positions []int, cellValues []cell, value uint32, note string) {
+func (s *SudokuSolver) _setClearFloatsTo(b *Board, positions []int, cellValues []Cell, value uint32, note string) {
 	for i, cellValue := range cellValues {
 		if cellValue.isFixed() {
 			s._setClearFloatTo(b, positions[i], cellValue, value, note)
@@ -149,7 +149,7 @@ func (s *SudokuSolver) _setClearFloatsTo(b *board, positions []int, cellValues [
 	}
 }
 
-func (s *SudokuSolver) _setClearFloatTo(b *board, pos int, c cell, value uint32, note string) {
+func (s *SudokuSolver) _setClearFloatTo(b *Board, pos int, c Cell, value uint32, note string) {
 	if c.isFloating(value) {
 		// clear float value
 		newCell := c.clearFloating(value)
@@ -171,7 +171,7 @@ func (s *SudokuSolver) _setClearFloatTo(b *board, pos int, c cell, value uint32,
 	}
 }
 
-func (s *SudokuSolver) _doClearFloating(b *board, m *Move) {
+func (s *SudokuSolver) _doClearFloating(b *Board, m *Move) {
 	// is it fixed? then nothing to do
 	if b.getCell(int(m.pos)).isFixed() {
 		return
@@ -193,7 +193,7 @@ func (s *SudokuSolver) _doClearFloating(b *board, m *Move) {
 	}
 }
 
-func (s *SudokuSolver) _checkIfHasOnlyOneFloatingAtPositions(b *board, value uint32, positions []int,
+func (s *SudokuSolver) _checkIfHasOnlyOneFloatingAtPositions(b *Board, value uint32, positions []int,
 	coord string) {
 	var count = s.state.board.countFloatingValue(value, positions)
 	if count == 1 {

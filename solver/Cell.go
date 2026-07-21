@@ -14,11 +14,11 @@ import (
  * F: Floating (possible) values
  */
 
-type cell struct {
+type Cell struct {
 	bits uint32
 }
 
-var cell_INITIAL_VALUE cell = cell{bits: 0x0003fe09} // not fixed, all 9 values possible
+var cell_INITIAL_VALUE Cell = Cell{bits: 0x0003fe09} // not fixed, all 9 values possible
 
 const cell_MASK_COUNT uint32 = 0x0000000f
 const cell_MASK_VALUE uint32 = 0x000000f0
@@ -31,35 +31,35 @@ var cell_MASK_FLOATING_BY_VALUE = [...]uint32{0, 1 << 9, 1 << 10, 1 << 11, 1 << 
 const cell_MASK_FLOATING = 0x0003fe00
 const cell_SHIFT_FLOATING = 8
 
-func (c *cell) getCount() uint32 {
+func (c *Cell) getCount() uint32 {
 	return c.bits & cell_MASK_COUNT
 }
 
-func (c *cell) getValue() uint32 {
+func (c *Cell) getValue() uint32 {
 	return (c.bits & cell_MASK_VALUE) >> cell_SHIFT_VALUE
 }
 
-func (c *cell) isFixed() bool {
+func (c *Cell) isFixed() bool {
 	return (c.bits&cell_MASK_FIXED)>>cell_SHIFT_FIXED == 1
 }
 
-func (c *cell) getFloatings() uint32 {
+func (c *Cell) getFloatings() uint32 {
 	return (c.bits & cell_MASK_FLOATING) >> cell_SHIFT_FLOATING
 }
 
-func (c *cell) getFixedAsFloatings() uint32 {
+func (c *Cell) getFixedAsFloatings() uint32 {
 	// simulate floating bit for fixed value
 	return (c.bits&cell_MASK_FLOATING | cell_MASK_FLOATING_BY_VALUE[(c.bits&cell_MASK_VALUE)>>cell_SHIFT_VALUE]) >> cell_SHIFT_FLOATING
 }
 
-func (c *cell) isFloating(value uint32) bool {
+func (c *Cell) isFloating(value uint32) bool {
 	return (c.bits & cell_MASK_FLOATING_BY_VALUE[value]) > 0
 }
 
 /*
  * finds the cell value if only 1 possible value is present
  */
-func (c *cell) findValue() uint32 {
+func (c *Cell) findValue() uint32 {
 	if c.isFixed() {
 		return c.getValue()
 	}
@@ -77,27 +77,27 @@ func (c *cell) findValue() uint32 {
 	return 0
 }
 
-func cell_setValue(value uint32) *cell {
-	return &cell{cell_MASK_FIXED | value<<cell_SHIFT_VALUE}
+func cell_setValue(value uint32) *Cell {
+	return &Cell{cell_MASK_FIXED | value<<cell_SHIFT_VALUE}
 }
 
-func (c *cell) clearFloating(value uint32) *cell {
+func (c *Cell) clearFloating(value uint32) *Cell {
 	var mask = cell_MASK_FLOATING_BY_VALUE[value]
 	if (c.bits & mask) == 0 {
 		return c
 	}
-	return &cell{c.bits &^ mask}
+	return &Cell{c.bits &^ mask}
 }
 
-func (c *cell) setFloating(value uint32) *cell {
+func (c *Cell) setFloating(value uint32) *Cell {
 	var mask = cell_MASK_FLOATING_BY_VALUE[value]
 	if (c.bits & mask) == mask {
 		return c
 	}
-	return &cell{c.bits | mask}
+	return &Cell{c.bits | mask}
 }
 
-func (c *cell) isValid() (bool, int) {
+func (c *Cell) isValid() (bool, int) {
 	if c.bits != (c.bits & 0x3ffff) {
 		// surplus bits
 		fmt.Printf("Not valid cell 1: surplus bits %8x \n", c.bits)
@@ -127,39 +127,6 @@ func (c *cell) isValid() (bool, int) {
 	return true, 0
 }
 
-func (c *cell) toString() {
+func (c *Cell) toString() {
 
 }
-
-/*
-
-	public static String toString(int bits) {
-		StringBuilder sb = new StringBuilder();
-		if (isFixed(bits)) {
-			sb.append("Fixed: ").append(getValue(bits));
-		} else {
-			sb.append("Floating (").append(getCount(bits)).append(") ");
-			for (int i = 1; i <= 9; i++) {
-				sb.append(isFloating(bits, i) ? (char)('0'+ i) : '_');
-			}
-		}
-		sb.append("  ").append(Integer.toBinaryString(bits));
-
-		return sb.toString();
-	}
-
-	public static String explain(int bits) {
-		StringBuilder sb = new StringBuilder();
-		if (isFixed(bits)) {
-			sb.append("Fixed ");
-		}
-		sb.append("value: ").append(getValue(bits));
-		sb.append(", Floatings: (").append(getCount(bits)).append(") ");
-		for (int i = 1; i <= 9; i++) {
-			sb.append(isFloating(bits, i) ? (char)('0'+ i) : '_');
-		}
-		sb.append("  Binary: ").append(Integer.toBinaryString(bits));
-
-		return sb.toString();
-	}
-*/

@@ -5,16 +5,16 @@ import (
 	"strings"
 )
 
-type boardDrawer struct {
-	board
+type BoardDrawer struct {
+	Board
 	sb strings.Builder
 }
 
-func new_boardDrawer(b *board) *boardDrawer {
-	return &boardDrawer{*b, strings.Builder{}}
+func new_boardDrawer(b *Board) *BoardDrawer {
+	return &BoardDrawer{*b, strings.Builder{}}
 }
 
-func (bd *boardDrawer) draw() string {
+func (bd *BoardDrawer) draw() string {
 	bd.drawSeparator(0)
 	for i := range 9 {
 		nums := bd.getRowValues(i)
@@ -27,7 +27,7 @@ func (bd *boardDrawer) draw() string {
 	return bd.sb.String()
 }
 
-func (bd *boardDrawer) drawLine(nums []cell, line int) {
+func (bd *BoardDrawer) drawLine(nums []Cell, line int) {
 	for j, num := range nums {
 		if j%3 == 0 {
 			bd.sb.WriteString("|")
@@ -38,7 +38,7 @@ func (bd *boardDrawer) drawLine(nums []cell, line int) {
 	bd.drawNl()
 }
 
-func (bd *boardDrawer) drawCell(c cell, line int) {
+func (bd *BoardDrawer) drawCell(c Cell, line int) {
 	if c.isFixed() {
 		switch line {
 		case 0:
@@ -64,7 +64,7 @@ func (bd *boardDrawer) drawCell(c cell, line int) {
 
 }
 
-func (bd *boardDrawer) drawSeparator(row int) {
+func (bd *BoardDrawer) drawSeparator(row int) {
 	if row%3 == 0 {
 		bd.sb.WriteString(strings.Repeat("+=====+=====+=====+", 3))
 	} else {
@@ -73,10 +73,10 @@ func (bd *boardDrawer) drawSeparator(row int) {
 	bd.drawNl()
 }
 
-func (bd *boardDrawer) drawSummary() {
+func (bd *BoardDrawer) drawSummary() {
 	counts := make([]int, 10) // TODO: VectorCache.drawSummaryVector
 	var totalFloats uint32 = 0
-	for _, c := range bd.board.board {
+	for _, c := range bd.Board.board {
 		if c.isFixed() {
 			counts[c.getValue()]++
 		} else {
@@ -92,6 +92,6 @@ func (bd *boardDrawer) drawSummary() {
 	bd.drawNl()
 }
 
-func (bd *boardDrawer) drawNl() {
+func (bd *BoardDrawer) drawNl() {
 	bd.sb.WriteString("\n")
 }

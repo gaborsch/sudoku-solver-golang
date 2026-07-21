@@ -8,8 +8,8 @@ const BOARD_SIZE = 81
 
 const board_SAFE_MODE = true
 
-type board struct {
-	board [BOARD_SIZE]cell
+type Board struct {
+	board [BOARD_SIZE]Cell
 }
 
 var board_BOXES = [][]int{{0, 1, 2, 9, 10, 11, 18, 19, 20}, {3, 4, 5, 12, 13, 14, 21, 22, 23},
@@ -52,16 +52,16 @@ var board_BOXES_AND_COLS = [][][]int{
 	{{}, {}, {}, {57, 66, 75}, {58, 67, 76}, {59, 68, 77}, {}, {}, {}},
 	{{}, {}, {}, {}, {}, {}, {60, 69, 78}, {61, 70, 79}, {62, 71, 80}}}
 
-func new_board() *board {
-	var b board = board{}
+func new_board() *Board {
+	var b Board = Board{}
 	for i := range BOARD_SIZE {
 		b.board[i] = cell_INITIAL_VALUE
 	}
 	return &b
 }
 
-func clone_board(orig *board) *board {
-	var b board = board{}
+func clone_board(orig *Board) *Board {
+	var b Board = Board{}
 	b.board = orig.board
 	return &b
 }
@@ -78,23 +78,23 @@ func board_getBoxPositions(boxIndex int) []int {
 	return board_BOXES[boxIndex]
 }
 
-func (b *board) fetchByMapping(mapping []int) []cell {
-	v := make([]cell, len(mapping)) // TODO: VectorCache.fetchByMappingVector
+func (b *Board) fetchByMapping(mapping []int) []Cell {
+	v := make([]Cell, len(mapping)) // TODO: VectorCache.fetchByMappingVector
 	for i, m := range mapping {
 		v[i] = b.board[m]
 	}
 	return v
 }
 
-func (b *board) getRowValues(rowIndex int) []cell {
+func (b *Board) getRowValues(rowIndex int) []Cell {
 	return b.fetchByMapping(board_ROWS[rowIndex])
 }
 
-func (b *board) getColValues(colIndex int) []cell {
+func (b *Board) getColValues(colIndex int) []Cell {
 	return b.fetchByMapping(board_COLS[colIndex])
 }
 
-func (b *board) getBoxValues(boxIndex int) []cell {
+func (b *Board) getBoxValues(boxIndex int) []Cell {
 	return b.fetchByMapping(board_BOXES[boxIndex])
 }
 
@@ -109,7 +109,7 @@ func board_intersectBoxCol(boxNum int, colNum int) []int {
 /*
  * counts how many times the given floating value exists at the given positions
  */
-func (b *board) countFloatingValue(value uint32, positions []int) int {
+func (b *Board) countFloatingValue(value uint32, positions []int) int {
 	var count int = 0
 	for _, pos := range positions {
 		if b.board[pos].isFloating(value) {
@@ -122,7 +122,7 @@ func (b *board) countFloatingValue(value uint32, positions []int) int {
 /*
  * returns the first position of a floating value using position array
  */
-func (b *board) getFirstFloatingValuePosition(value uint32, positions []int) int {
+func (b *Board) getFirstFloatingValuePosition(value uint32, positions []int) int {
 	for _, pos := range positions {
 		if b.board[pos].isFloating(value) {
 			return pos
@@ -131,32 +131,32 @@ func (b *board) getFirstFloatingValuePosition(value uint32, positions []int) int
 	return -1
 }
 
-func (b *board) setFixedValue(pos int, value uint32) *cell {
+func (b *Board) setFixedValue(pos int, value uint32) *Cell {
 	return b._writeBoard(pos, cell_setValue(value))
 }
 
-func (b *board) getCell(pos int) *cell {
+func (b *Board) getCell(pos int) *Cell {
 	return &b.board[pos]
 }
 
-func (b *board) setCell(pos int, c *cell) {
+func (b *Board) setCell(pos int, c *Cell) {
 	b._writeBoard(pos, c)
 }
 
-func (b *board) clearFloating(pos int, value uint32) *cell {
+func (b *Board) clearFloating(pos int, value uint32) *Cell {
 	return b._writeBoard(pos, b.board[pos].clearFloating(value))
 }
 
-func (b *board) _writeBoard(pos int, c *cell) *cell {
+func (b *Board) _writeBoard(pos int, c *Cell) *Cell {
 	if board_SAFE_MODE {
 		cellValid, errCode := c.isValid()
 		if !cellValid {
-			throw(invalidMoveException{pos, c.bits, []string{fmt.Sprintf("Cell error: %d", errCode)}})
+			throw(InvalidMoveException{pos, c.bits, []string{fmt.Sprintf("Cell error: %d", errCode)}})
 		}
 		b.board[pos] = *c
 		board_errors := b._isValid()
 		if len(board_errors) > 0 {
-			throw(invalidMoveException{pos, c.bits, board_errors})
+			throw(InvalidMoveException{pos, c.bits, board_errors})
 		}
 	} else {
 		b.board[pos] = *c
@@ -177,11 +177,11 @@ func board_getBoxNum(pos int) int {
 	return (pos/27)*3 + (pos%9)/3
 }
 
-func (b *board) draw() string {
+func (b *Board) draw() string {
 	return new_boardDrawer(b).draw()
 }
 
-func (b *board) isSolved() bool {
+func (b *Board) isSolved() bool {
 	for _, c := range b.board {
 		if !c.isFixed() {
 			return false
@@ -194,7 +194,7 @@ func board_posToString(pos int) string {
 	return fmt.Sprintf("row %d, column %d", board_getRowNum(pos)+1, board_getColNum(pos)+1)
 }
 
-func (b *board) _isValid() []string {
+func (b *Board) _isValid() []string {
 	var errors []string
 	for i, posArr := range board_BOXES {
 		valid, error := b._checkValidValues(posArr)
@@ -217,7 +217,7 @@ func (b *board) _isValid() []string {
 	return errors
 }
 
-func (b *board) _checkValidValues(posArr []int) (bool, string) {
+func (b *Board) _checkValidValues(posArr []int) (bool, string) {
 	fixedValues := make([]int, 10) // TODO: VectorCache.checkValidValues
 	var floatings uint32 = 0
 	for _, pos := range posArr {
@@ -237,7 +237,7 @@ func (b *board) _checkValidValues(posArr []int) (bool, string) {
 	return true, ""
 }
 
-func (b *board) hashCode() int {
+func (b *Board) hashCode() int {
 	var h uint32 = 0
 	for _, c := range b.board {
 		h = h*23 + c.bits

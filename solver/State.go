@@ -1,17 +1,17 @@
 package solver
 
-type state struct {
-	board           *board
+type State struct {
+	board           *Board
 	setValueMoves   []Move
 	clearFloatMoves []Move
 }
 
-func new_state() *state {
+func new_state() *State {
 	var board = new_board()
-	return &state{board, make([]Move, 0), make([]Move, 0)}
+	return &State{board, make([]Move, 0), make([]Move, 0)}
 }
 
-func (s *state) addMoves(moves []Move) {
+func (s *State) addMoves(moves []Move) {
 	for _, m := range moves {
 		s.addMove(&m)
 	}
@@ -22,7 +22,7 @@ func (s *state) addMoves(moves []Move) {
 	}
 }
 
-func (s *state) addMove(m *Move) {
+func (s *State) addMove(m *Move) {
 	switch m.moveType {
 	case moveType_INIT_VALUE:
 		s.setValueMoves = append(s.setValueMoves, *m)
@@ -33,11 +33,11 @@ func (s *state) addMove(m *Move) {
 	}
 }
 
-func (s *state) hasNextMove() bool {
+func (s *State) hasNextMove() bool {
 	return len(s.setValueMoves) > 0 || len(s.clearFloatMoves) > 0
 }
 
-func (s *state) getNextMove() *Move {
+func (s *State) getNextMove() *Move {
 	var m Move
 	if len(s.setValueMoves) > 0 {
 		m = s.setValueMoves[0]

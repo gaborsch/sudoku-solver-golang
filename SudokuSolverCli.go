@@ -152,7 +152,7 @@ func boardReader_getBoard(s string) []solver.Move {
 		line += "         "
 		for j, c := range line[:9] {
 			if c >= '1' && c <= '9' {
-				moves = append(moves, solver.Move_initValue((uint8)(i*9+j), (uint8)(c-'0'), "initial"))
+				moves = append(moves, *solver.Move_initValue((uint8)(i*9+j), (uint8)(c-'0'), "initial"))
 			}
 		}
 	}

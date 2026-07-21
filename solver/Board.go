@@ -181,7 +181,7 @@ func (b *board) draw() string {
 	return new_boardDrawer(b).draw()
 }
 
-func (b *board) _isSolved() bool {
+func (b *board) isSolved() bool {
 	for _, c := range b.board {
 		if !c.isFixed() {
 			return false
@@ -235,4 +235,13 @@ func (b *board) _checkValidValues(posArr []int) (bool, string) {
 		return false, fmt.Sprintf("Cleared all possible values (%x)", floatings)
 	}
 	return true, ""
+}
+
+func (b *board) hashCode() int {
+	var h uint32 = 0
+	for _, c := range b.board {
+		h = h*23 + c.bits
+	}
+	return int(h)
+
 }

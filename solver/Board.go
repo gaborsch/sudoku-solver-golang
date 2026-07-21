@@ -52,18 +52,18 @@ var board_BOXES_AND_COLS = [][][]int{
 	{{}, {}, {}, {57, 66, 75}, {58, 67, 76}, {59, 68, 77}, {}, {}, {}},
 	{{}, {}, {}, {}, {}, {}, {60, 69, 78}, {61, 70, 79}, {62, 71, 80}}}
 
-func new_board() board {
+func new_board() *board {
 	var b board = board{}
 	for i := range BOARD_SIZE {
 		b.board[i] = cell_INITIAL_VALUE
 	}
-	return b
+	return &b
 }
 
-func clone_board(orig board) board {
+func clone_board(orig *board) *board {
 	var b board = board{}
 	b.board = orig.board
-	return b
+	return &b
 }
 
 func board_getRowPositions(rowIndex int) []int {
@@ -131,35 +131,35 @@ func (b *board) getFirstFloatingValuePosition(value uint32, positions []int) int
 	return -1
 }
 
-func (b *board) setFixedValue(pos int, value uint32) cell {
+func (b *board) setFixedValue(pos int, value uint32) *cell {
 	return b._writeBoard(pos, cell_setValue(value))
 }
 
-func (b *board) getCell(pos int) cell {
-	return b.board[pos]
+func (b *board) getCell(pos int) *cell {
+	return &b.board[pos]
 }
 
-func (b *board) setCell(pos int, c cell) {
+func (b *board) setCell(pos int, c *cell) {
 	b._writeBoard(pos, c)
 }
 
-func (b *board) clearFloating(pos int, value uint32) cell {
+func (b *board) clearFloating(pos int, value uint32) *cell {
 	return b._writeBoard(pos, b.board[pos].clearFloating(value))
 }
 
-func (b *board) _writeBoard(pos int, c cell) cell {
+func (b *board) _writeBoard(pos int, c *cell) *cell {
 	if board_SAFE_MODE {
 		cellValid, errCode := c.isValid()
 		if !cellValid {
 			throw(invalidMoveException{pos, c.bits, []string{fmt.Sprintf("Cell error: %d", errCode)}})
 		}
-		b.board[pos] = c
+		b.board[pos] = *c
 		board_errors := b._isValid()
 		if len(board_errors) > 0 {
 			throw(invalidMoveException{pos, c.bits, board_errors})
 		}
 	} else {
-		b.board[pos] = c
+		b.board[pos] = *c
 	}
 
 	return c

@@ -21,8 +21,11 @@ type sudokuSolverCli struct {
 }
 
 func new_sudokuSolverCli() sudokuSolverCli {
-	var solver = solver.New_SudokuSolver()
-	return sudokuSolverCli{&solver, "", 0}
+	return sudokuSolverCli{solver: solver.New_SudokuSolver(), line: "", linePos: 0}
+}
+
+func (s *sudokuSolverCli) reInit() {
+	s.solver = solver.New_SudokuSolver()
 }
 
 func (s *sudokuSolverCli) run() {
@@ -88,6 +91,7 @@ func (s *sudokuSolverCli) readInt() int {
 
 func (s *sudokuSolverCli) example() {
 	sample := SAMPLES[s.readInt()]
+	s.reInit()
 
 	moves := boardReader_getBoard(sample)
 	s.solver.AddMoves(moves)
@@ -102,6 +106,7 @@ func (s *sudokuSolverCli) example() {
 }
 
 func (s *sudokuSolverCli) board(scanner *bufio.Scanner) {
+	s.reInit()
 
 	ROW_PATTERN := regexp.MustCompile(`^[1-9 ]{0,9}$`)
 	var sb strings.Builder

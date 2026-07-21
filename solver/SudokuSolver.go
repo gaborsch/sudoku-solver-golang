@@ -9,9 +9,8 @@ type SudokuSolver struct {
 	processedmoves []Move
 }
 
-func New_SudokuSolver() SudokuSolver {
-	var state = new_state()
-	return SudokuSolver{&state, true, true, make([]Move, BOARD_SIZE)}
+func New_SudokuSolver() *SudokuSolver {
+	return &SudokuSolver{state: new_state(), info: true, trace: true, processedmoves: make([]Move, BOARD_SIZE)}
 }
 
 func (s *SudokuSolver) Draw() string {

@@ -31,35 +31,35 @@ var cell_MASK_FLOATING_BY_VALUE = [...]uint32{0, 1 << 9, 1 << 10, 1 << 11, 1 << 
 const cell_MASK_FLOATING = 0x0003fe00
 const cell_SHIFT_FLOATING = 8
 
-func (c cell) getCount() uint32 {
+func (c *cell) getCount() uint32 {
 	return c.bits & cell_MASK_COUNT
 }
 
-func (c cell) getValue() uint32 {
+func (c *cell) getValue() uint32 {
 	return (c.bits & cell_MASK_VALUE) >> cell_SHIFT_VALUE
 }
 
-func (c cell) isFixed() bool {
+func (c *cell) isFixed() bool {
 	return (c.bits&cell_MASK_FIXED)>>cell_SHIFT_FIXED == 1
 }
 
-func (c cell) getFloatings() uint32 {
+func (c *cell) getFloatings() uint32 {
 	return (c.bits & cell_MASK_FLOATING) >> cell_SHIFT_FLOATING
 }
 
-func (c cell) getFixedAsFloatings() uint32 {
+func (c *cell) getFixedAsFloatings() uint32 {
 	// simulate floating bit for fixed value
 	return (c.bits&cell_MASK_FLOATING | cell_MASK_FLOATING_BY_VALUE[(c.bits&cell_MASK_VALUE)>>cell_SHIFT_VALUE]) >> cell_SHIFT_FLOATING
 }
 
-func (c cell) isFloating(value uint32) bool {
+func (c *cell) isFloating(value uint32) bool {
 	return (c.bits & cell_MASK_FLOATING_BY_VALUE[value]) > 0
 }
 
 /*
  * finds the cell value if only 1 possible value is present
  */
-func (c cell) findValue() uint32 {
+func (c *cell) findValue() uint32 {
 	if c.isFixed() {
 		return c.getValue()
 	}
@@ -77,27 +77,27 @@ func (c cell) findValue() uint32 {
 	return 0
 }
 
-func cell_setValue(value uint32) cell {
-	return cell{cell_MASK_FIXED | value<<cell_SHIFT_VALUE}
+func cell_setValue(value uint32) *cell {
+	return &cell{cell_MASK_FIXED | value<<cell_SHIFT_VALUE}
 }
 
-func (c cell) clearFloating(value uint32) cell {
+func (c *cell) clearFloating(value uint32) *cell {
 	var mask = cell_MASK_FLOATING_BY_VALUE[value]
 	if (c.bits & mask) == 0 {
 		return c
 	}
-	return cell{c.bits &^ mask}
+	return &cell{c.bits &^ mask}
 }
 
-func (c cell) setFloating(value uint32) cell {
+func (c *cell) setFloating(value uint32) *cell {
 	var mask = cell_MASK_FLOATING_BY_VALUE[value]
 	if (c.bits & mask) == mask {
 		return c
 	}
-	return cell{c.bits | mask}
+	return &cell{c.bits | mask}
 }
 
-func (c cell) isValid() (bool, int) {
+func (c *cell) isValid() (bool, int) {
 	if c.bits != (c.bits & 0x3ffff) {
 		// surplus bits
 		fmt.Printf("Not valid cell 1: surplus bits %8x \n", c.bits)
@@ -127,7 +127,7 @@ func (c cell) isValid() (bool, int) {
 	return true, 0
 }
 
-func (c cell) toString() {
+func (c *cell) toString() {
 
 }
 

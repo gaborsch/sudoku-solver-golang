@@ -14,49 +14,57 @@ func main() {
 	solver.run()
 }
 
-type sudokuSolverCli struct {
+type SudokuSolverCli struct {
 	solver  *solver.SudokuSolver
 	line    string
 	linePos int
 }
 
-func new_sudokuSolverCli() sudokuSolverCli {
-	return sudokuSolverCli{solver: solver.New_SudokuSolver(), line: "", linePos: 0}
+func new_sudokuSolverCli() SudokuSolverCli {
+	return SudokuSolverCli{solver: solver.New_SudokuSolver(), line: "", linePos: 0}
 }
 
-func (s *sudokuSolverCli) reInit() {
+func (s *SudokuSolverCli) reInit() {
 	s.solver = solver.New_SudokuSolver()
 }
 
-func (s *sudokuSolverCli) run() {
+func (s *SudokuSolverCli) run() {
 	s.help()
 	scanner := bufio.NewScanner(os.Stdin)
 	isRunning := true
 
+	fmt.Print("> ")
 	for isRunning && scanner.Scan() {
 		s.line = scanner.Text()
 		s.linePos = 0
-		Log("Input: '" + s.line + "'")
+		// Log("Input: '" + s.line + "'")
 
 		switch {
 		case s.check([]string{"help", "h"}):
 			s.help()
 		case s.check([]string{"board", "b"}):
-			Log("board case")
+			Log("Setting up a new board")
 			s.board(scanner)
 		case s.check([]string{"example", "e"}):
-			Log("example case")
+			Log("Loading example board")
 			s.example()
+		case s.check([]string{"run", "r"}):
+			Log("Solving the board")
+			s.runSolver()
+		case s.check([]string{"draw", "d"}):
+			Log("Drawing the board")
+			s.draw()
 		case s.check([]string{"set", "s"}):
-			Log("set case")
+			Log("Setting a value")
 		case s.check([]string{"clear", "c"}):
-			Log("clear case")
+			Log("Clearing a value")
 		case s.check([]string{"exit", "x", "quit", "q"}):
 			msg("Exiting...")
 			isRunning = false
 		default:
 			msg("Unknown command")
 		}
+		fmt.Print("> ")
 	}
 
 	if err := scanner.Err(); err != nil {
@@ -65,7 +73,7 @@ func (s *sudokuSolverCli) run() {
 
 }
 
-func (s *sudokuSolverCli) check(words []string) bool {
+func (s *SudokuSolverCli) check(words []string) bool {
 	for _, word := range words {
 		if strings.HasPrefix(s.line[s.linePos:], word) {
 			s.linePos += len(word)
@@ -75,11 +83,11 @@ func (s *sudokuSolverCli) check(words []string) bool {
 	return false
 }
 
-func (s *sudokuSolverCli) readAll() string {
+func (s *SudokuSolverCli) readAll() string {
 	return s.line[s.linePos:]
 }
 
-func (s *sudokuSolverCli) readInt() int {
+func (s *SudokuSolverCli) readInt() int {
 	var v int
 	cnt, err := fmt.Sscanf(s.readAll(), "%d", &v)
 	if cnt > 0 {
@@ -89,23 +97,25 @@ func (s *sudokuSolverCli) readInt() int {
 	panic(err)
 }
 
-func (s *sudokuSolverCli) example() {
+func (s *SudokuSolverCli) draw() {
+	msg(s.solver.Draw())
+}
+
+func (s *SudokuSolverCli) runSolver() {
+	s.solver.Solve()
+	msg(s.solver.Draw())
+}
+
+func (s *SudokuSolverCli) example() {
 	sample := SAMPLES[s.readInt()]
 	s.reInit()
 
 	moves := boardReader_getBoard(sample)
 	s.solver.AddMoves(moves)
-	if s == nil {
-		fmt.Println("sudokuSolverCli s == nil")
-	}
-	if s.solver == nil {
-		fmt.Println("sudokuSolverCli s.solver == nil")
-	}
-
 	msg(s.solver.Draw())
 }
 
-func (s *sudokuSolverCli) board(scanner *bufio.Scanner) {
+func (s *SudokuSolverCli) board(scanner *bufio.Scanner) {
 	s.reInit()
 
 	ROW_PATTERN := regexp.MustCompile(`^[1-9 ]{0,9}$`)
@@ -140,7 +150,7 @@ func msg(msg string) {
 	fmt.Println(msg)
 }
 
-func (s sudokuSolverCli) help() {
+func (s SudokuSolverCli) help() {
 	fmt.Println("Sudoku solver by gaborsch, (c) 2023-2026")
 }
 

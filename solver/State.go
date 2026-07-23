@@ -17,7 +17,7 @@ func (s *State) addMoves(moves []Move) {
 	}
 	for _, m := range moves {
 		if m.moveType == moveType_INIT_VALUE {
-			s.board.setFixedValue(int(m.pos), uint32(m.value))
+			s.board.setFixedValue(int(m.pos), m.value)
 		}
 	}
 }

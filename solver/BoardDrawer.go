@@ -50,7 +50,7 @@ func (bd *BoardDrawer) drawCell(c Cell, line int) {
 		}
 	} else {
 		for i := range 3 {
-			var value = (uint32)(line*3 + i + 1)
+			var value = (uint8)(line*3 + i + 1)
 			if c.isFloating(value) {
 				fmt.Fprintf(&bd.sb, "%d", value)
 			} else {

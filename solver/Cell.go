@@ -30,13 +30,14 @@ var cell_MASK_FLOATING_BY_VALUE = [...]uint32{0, 1 << 9, 1 << 10, 1 << 11, 1 << 
 
 const cell_MASK_FLOATING = 0x0003fe00
 const cell_SHIFT_FLOATING = 8
+const cell_MASK_ALL = 0x0003ffff
 
 func (c *Cell) getCount() uint32 {
 	return c.bits & cell_MASK_COUNT
 }
 
-func (c *Cell) getValue() uint32 {
-	return (c.bits & cell_MASK_VALUE) >> cell_SHIFT_VALUE
+func (c *Cell) getValue() uint8 {
+	return uint8((c.bits & cell_MASK_VALUE) >> cell_SHIFT_VALUE)
 }
 
 func (c *Cell) isFixed() bool {
@@ -52,21 +53,22 @@ func (c *Cell) getFixedAsFloatings() uint32 {
 	return (c.bits&cell_MASK_FLOATING | cell_MASK_FLOATING_BY_VALUE[(c.bits&cell_MASK_VALUE)>>cell_SHIFT_VALUE]) >> cell_SHIFT_FLOATING
 }
 
-func (c *Cell) isFloating(value uint32) bool {
+func (c *Cell) isFloating(value uint8) bool {
+	// fmt.Printf("isFloating: %d (%018b & %018b = %018b), %t\n", value, c.bits, cell_MASK_FLOATING_BY_VALUE[value], c.bits&cell_MASK_FLOATING_BY_VALUE[value], (c.bits&cell_MASK_FLOATING_BY_VALUE[value]) > 0)
 	return (c.bits & cell_MASK_FLOATING_BY_VALUE[value]) > 0
 }
 
 /*
  * finds the cell value if only 1 possible value is present
  */
-func (c *Cell) findValue() uint32 {
+func (c *Cell) findValue() uint8 {
 	if c.isFixed() {
 		return c.getValue()
 	}
 	if c.getCount() > 1 {
 		return 0
 	}
-	var v uint32 = 1
+	var v uint8 = 1
 
 	for v <= 9 {
 		if (c.bits & cell_MASK_FLOATING_BY_VALUE[v]) > 0 {
@@ -77,19 +79,21 @@ func (c *Cell) findValue() uint32 {
 	return 0
 }
 
-func cell_setValue(value uint32) *Cell {
-	return &Cell{cell_MASK_FIXED | value<<cell_SHIFT_VALUE}
+func cell_setValue(value uint8) *Cell {
+	return &Cell{cell_MASK_FIXED | uint32(value)<<cell_SHIFT_VALUE}
 }
 
-func (c *Cell) clearFloating(value uint32) *Cell {
+func (c *Cell) clearFloating(value uint8) *Cell {
 	var mask = cell_MASK_FLOATING_BY_VALUE[value]
 	if (c.bits & mask) == 0 {
+		// fmt.Printf("clearFloating1 %08x %08x %t\n", c.bits, mask, (c.bits&mask) == 0)
 		return c
 	}
-	return &Cell{c.bits &^ mask}
+	// fmt.Printf("clearFloating2 %08x %08x %08x %t\n", c.bits, (c.bits&^mask)-1, (c.bits&(cell_MASK_ALL^mask))-1, (c.bits&(cell_MASK_ALL^mask))-1 == (c.bits&^mask))
+	return &Cell{(c.bits & (cell_MASK_ALL ^ mask)) - 1}
 }
 
-func (c *Cell) setFloating(value uint32) *Cell {
+func (c *Cell) setFloating(value uint8) *Cell {
 	var mask = cell_MASK_FLOATING_BY_VALUE[value]
 	if (c.bits & mask) == mask {
 		return c
@@ -127,6 +131,6 @@ func (c *Cell) isValid() (bool, int) {
 	return true, 0
 }
 
-func (c *Cell) toString() {
-
+func (c *Cell) toString() string {
+	return fmt.Sprintf("Cell{bits=%08x, count=%d, value=%d, fixed=%t, floatings=%09b}", c.bits, c.getCount(), c.getValue(), c.isFixed(), c.getFloatings())
 }

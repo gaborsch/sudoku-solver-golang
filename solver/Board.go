@@ -9,7 +9,8 @@ const BOARD_SIZE = 81
 const board_SAFE_MODE = true
 
 type Board struct {
-	board [BOARD_SIZE]Cell
+	board   [BOARD_SIZE]Cell
+	version int
 }
 
 var board_BOXES = [][]int{{0, 1, 2, 9, 10, 11, 18, 19, 20}, {3, 4, 5, 12, 13, 14, 21, 22, 23},
@@ -57,12 +58,16 @@ func new_board() *Board {
 	for i := range BOARD_SIZE {
 		b.board[i] = cell_INITIAL_VALUE
 	}
+	b.version = 0
+	// fmt.Println("new_board")
 	return &b
 }
 
 func clone_board(orig *Board) *Board {
 	var b Board = Board{}
 	b.board = orig.board
+	b.version = orig.version + 1
+	// fmt.Printf("clone_board version %d -> %d\n", orig.version, b.version)
 	return &b
 }
 
@@ -109,7 +114,7 @@ func board_intersectBoxCol(boxNum int, colNum int) []int {
 /*
  * counts how many times the given floating value exists at the given positions
  */
-func (b *Board) countFloatingValue(value uint32, positions []int) int {
+func (b *Board) countFloatingValue(value uint8, positions []int) int {
 	var count int = 0
 	for _, pos := range positions {
 		if b.board[pos].isFloating(value) {
@@ -122,7 +127,7 @@ func (b *Board) countFloatingValue(value uint32, positions []int) int {
 /*
  * returns the first position of a floating value using position array
  */
-func (b *Board) getFirstFloatingValuePosition(value uint32, positions []int) int {
+func (b *Board) getFirstFloatingValuePosition(value uint8, positions []int) int {
 	for _, pos := range positions {
 		if b.board[pos].isFloating(value) {
 			return pos
@@ -131,7 +136,7 @@ func (b *Board) getFirstFloatingValuePosition(value uint32, positions []int) int
 	return -1
 }
 
-func (b *Board) setFixedValue(pos int, value uint32) *Cell {
+func (b *Board) setFixedValue(pos int, value uint8) *Cell {
 	return b._writeBoard(pos, cell_setValue(value))
 }
 
@@ -143,7 +148,7 @@ func (b *Board) setCell(pos int, c *Cell) {
 	b._writeBoard(pos, c)
 }
 
-func (b *Board) clearFloating(pos int, value uint32) *Cell {
+func (b *Board) clearFloating(pos int, value uint8) *Cell {
 	return b._writeBoard(pos, b.board[pos].clearFloating(value))
 }
 
@@ -153,12 +158,14 @@ func (b *Board) _writeBoard(pos int, c *Cell) *Cell {
 		if !cellValid {
 			throw(InvalidMoveException{pos, c.bits, []string{fmt.Sprintf("Cell error: %d", errCode)}})
 		}
+		// fmt.Printf("safe_writeBoard(%d): pos=%s, value=%d, cell=%s\n", b.version, board_posToStringShort(pos), c.getValue(), c.toString())
 		b.board[pos] = *c
 		board_errors := b._isValid()
 		if len(board_errors) > 0 {
 			throw(InvalidMoveException{pos, c.bits, board_errors})
 		}
 	} else {
+		// fmt.Printf("_writeBoard(%d): pos=%s, value=%d, cell=%s\n", b.version, board_posToStringShort(pos), c.getValue(), c.toString())
 		b.board[pos] = *c
 	}
 
@@ -192,6 +199,10 @@ func (b *Board) isSolved() bool {
 
 func board_posToString(pos int) string {
 	return fmt.Sprintf("row %d, column %d", board_getRowNum(pos)+1, board_getColNum(pos)+1)
+}
+
+func board_posToStringShort(pos int) string {
+	return fmt.Sprintf("[%d,%d]", board_getRowNum(pos)+1, board_getColNum(pos)+1)
 }
 
 func (b *Board) _isValid() []string {

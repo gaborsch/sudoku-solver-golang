@@ -17,7 +17,6 @@ func New_SudokuSolver() *SudokuSolver {
 }
 
 func (s *SudokuSolver) Draw() string {
-	fmt.Println("Draw()")
 	if s == nil {
 		fmt.Println("s == nil")
 	}
@@ -69,8 +68,8 @@ func (s *SudokuSolver) Solve() *Board {
 		}
 
 		if !s.state.board.isSolved() {
-			s.info("Generating moves...")
-			new_moveGenerator(s.state).generateMoves()
+			// s.info("Generating moves...")
+			new_moveGen(s.state).generateMoves()
 			boardHash = 0
 		}
 
@@ -79,78 +78,36 @@ func (s *SudokuSolver) Solve() *Board {
 	return s.state.board
 }
 
-/*
-
-	public Board solve() {
-		int boardHash = 0;
-		do {
-			while (!state.getBoard().isSolved() && state.hasNextMove()) {
-				Move m = state.getNextMove();
-				Board b = state.getBoard();
-				if ((trace && boardHash != b.hashCode())
-						|| (info && boardHash == 0)) {
-					if (trace)  {
-						trace(b.draw());
-					} else {
-						info(b.draw());
-					}
-					boardHash = b.hashCode();
-				}
-				if (!processedMoves.contains(m)) {
-					info(m.toString());
-					processedMoves.add(m);
-				}
-				switch (m.getType()) {
-					case INIT_VALUE:
-						doInitValue(b, m);
-						break;
-					case SET_VALUE:
-						doSetValue(b, m);
-						break;
-					case CLEAR_FLOAT:
-						doClearFloating(b, m);
-						break;
-					default:
-						break;
-				}
-			}
-			if(! state.getBoard().isSolved()) {
-				info("Generating moves...");
-				new MoveGenerator(state).generateMoves();
-				boardHash = 0;
-			}
-		} while (!state.getBoard().isSolved() && state.hasNextMove());
-
-		return state.getBoard();
-	}
-*/
-
 func (s *SudokuSolver) _doInitValue(b *Board, m *Move) {
-	b.setFixedValue(int(m.pos), uint32(m.value))
+	// fmt.Printf("_doInitValue: %s\n", m.toString())
+	b.setFixedValue(int(m.pos), m.value)
 	s.state.addMove(move_setValue(m.pos, m.value, "Initial check"))
 }
 
 func (s *SudokuSolver) _doSetValue(b *Board, m *Move) {
-	b.setFixedValue(int(m.pos), uint32(m.value))
+	// fmt.Printf("_doSetValue: %s\n", m.toString())
 	rn := m.getRowNum()
-	s._setClearFloatsTo(b, board_getRowPositions(rn), b.getRowValues(rn), uint32(m.value), "clearing "+m.getRowCoord()+" for "+m.getCoords())
-	cn := m.getRowNum()
-	s._setClearFloatsTo(b, board_getColPositions(cn), b.getColValues(rn), uint32(m.value), "clearing "+m.getColCoord()+" for "+m.getCoords())
-	bn := m.getRowNum()
-	s._setClearFloatsTo(b, board_getBoxPositions(bn), b.getBoxValues(rn), uint32(m.value), "clearing "+m.getBoxCoord()+" for "+m.getCoords())
-
+	s._setClearFloatsTo(b, board_getRowPositions(rn), b.getRowValues(rn), m.value, "clearing "+m.getRowCoord()+" for "+m.getCoords())
+	cn := m.getColNum()
+	s._setClearFloatsTo(b, board_getColPositions(cn), b.getColValues(cn), m.value, "clearing "+m.getColCoord()+" for "+m.getCoords())
+	bn := m.getBoxNum()
+	s._setClearFloatsTo(b, board_getBoxPositions(bn), b.getBoxValues(bn), m.value, "clearing "+m.getBoxCoord()+" for "+m.getCoords())
 }
 
-func (s *SudokuSolver) _setClearFloatsTo(b *Board, positions []int, cellValues []Cell, value uint32, note string) {
+func (s *SudokuSolver) _setClearFloatsTo(b *Board, positions []int, cellValues []Cell, value uint8, note string) {
+	// fmt.Printf("SudokuSolver._setClearFloatsTo: pos=%v, value=%d, because %s\n", positions, value, note)
+
 	for i, cellValue := range cellValues {
-		if cellValue.isFixed() {
+		if !cellValue.isFixed() {
 			s._setClearFloatTo(b, positions[i], cellValue, value, note)
 		}
 	}
 }
 
-func (s *SudokuSolver) _setClearFloatTo(b *Board, pos int, c Cell, value uint32, note string) {
+func (s *SudokuSolver) _setClearFloatTo(b *Board, pos int, c Cell, value uint8, note string) {
+	// fmt.Printf("SudokuSolver._setClearFloatTo: pos=%s, value=%d, because %s\n", board_posToString(pos), value, note)
 	if c.isFloating(value) {
+		// fmt.Printf("_setClearFloatTo: pos=%s, value=%d, because %s\n", board_posToString(pos), value, note)
 		// clear float value
 		newCell := c.clearFloating(value)
 		// check if there is only 1 candidate left
@@ -160,7 +117,7 @@ func (s *SudokuSolver) _setClearFloatTo(b *Board, pos int, c Cell, value uint32,
 			// if more than 1, then save the cleared value
 			b.setCell(pos, newCell)
 			// and mark the clear float for processing
-			s.state.addMove(move_clearFloat(uint8(pos), uint8(value), note))
+			s.state.addMove(move_clearFloat(uint8(pos), value, note))
 		} else {
 			// if all others are cleared, save the new fixed value on the board
 			b.setCell(pos, cell_setValue(fixedValue))
@@ -178,7 +135,7 @@ func (s *SudokuSolver) _doClearFloating(b *Board, m *Move) {
 	}
 
 	// clear the floating value if it has not happened yet
-	var cell = b.clearFloating(int(m.pos), uint32(m.value))
+	var cell = b.clearFloating(int(m.pos), m.value)
 
 	// check if there's only one floating left, if yes, set that value
 	var fixedValue = cell.findValue()
@@ -187,19 +144,19 @@ func (s *SudokuSolver) _doClearFloating(b *Board, m *Move) {
 		s.state.addMove(move_setValue(m.pos, uint8(fixedValue), "single cell value"))
 	} else {
 		// check if only one possibility remained in the box / row / column
-		s._checkIfHasOnlyOneFloatingAtPositions(b, uint32(m.value), board_getRowPositions(m.getRowNum()), m.getRowCoord())
-		s._checkIfHasOnlyOneFloatingAtPositions(b, uint32(m.value), board_getColPositions(m.getColNum()), m.getColCoord())
-		s._checkIfHasOnlyOneFloatingAtPositions(b, uint32(m.value), board_getBoxPositions(m.getBoxNum()), m.getBoxCoord())
+		s._checkIfHasOnlyOneFloatingAtPositions(b, m.value, board_getRowPositions(m.getRowNum()), m.getRowCoord())
+		s._checkIfHasOnlyOneFloatingAtPositions(b, m.value, board_getColPositions(m.getColNum()), m.getColCoord())
+		s._checkIfHasOnlyOneFloatingAtPositions(b, m.value, board_getBoxPositions(m.getBoxNum()), m.getBoxCoord())
 	}
 }
 
-func (s *SudokuSolver) _checkIfHasOnlyOneFloatingAtPositions(b *Board, value uint32, positions []int,
+func (s *SudokuSolver) _checkIfHasOnlyOneFloatingAtPositions(b *Board, value uint8, positions []int,
 	coord string) {
 	var count = s.state.board.countFloatingValue(value, positions)
 	if count == 1 {
 		var pos = s.state.board.getFirstFloatingValuePosition(value, positions)
 		b.setFixedValue(pos, value)
-		s.state.addMove(move_setValue(uint8(pos), uint8(value), "only one left in %s"+coord))
+		s.state.addMove(move_setValue(uint8(pos), uint8(value), "only one left in "+coord))
 	}
 }
 

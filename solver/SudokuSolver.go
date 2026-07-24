@@ -7,24 +7,22 @@ import (
 
 type SudokuSolver struct {
 	state          *State
-	logInfo        bool
-	logTrace       bool
 	processedMoves []Move
 }
 
 func New_SudokuSolver() *SudokuSolver {
-	return &SudokuSolver{state: new_state(), logInfo: true, logTrace: true, processedMoves: make([]Move, BOARD_SIZE)}
+	return &SudokuSolver{state: new_state(), processedMoves: make([]Move, BOARD_SIZE)}
 }
 
 func (s *SudokuSolver) Draw() string {
 	if s == nil {
-		fmt.Println("s == nil")
+		LogError("s == nil")
 	}
 	if s.state == nil {
-		fmt.Println("s.state == nil")
+		LogError("s.state == nil")
 	}
 	if s.state.board == nil {
-		fmt.Println("s.state.board == nil")
+		LogError("s.state.board == nil")
 	}
 	return s.state.board.draw()
 }
@@ -42,17 +40,17 @@ func (s *SudokuSolver) Solve() *Board {
 			m := s.state.getNextMove()
 			b := s.state.board
 
-			if (s.logTrace && boardHash != b.hashCode()) || (s.logInfo && boardHash == 0) {
-				if s.logTrace {
-					s.trace(b.draw())
+			if (HasTrace(COMPONENT_SUDOKU_SOLVER) && boardHash != b.hashCode()) || (HasInfo() && boardHash == 0) {
+				if HasTrace(COMPONENT_SUDOKU_SOLVER) {
+					LogTrace(COMPONENT_SUDOKU_SOLVER, b.draw())
 				} else {
-					s.info(b.draw())
+					LogInfo(b.draw())
 				}
 				boardHash = b.hashCode()
 			}
 
 			if !slices.ContainsFunc(s.processedMoves, func(m2 Move) bool { return m.Equals(m2) }) {
-				s.info(m.toString())
+				LogInfo(m.toString())
 				s.processedMoves = append(s.processedMoves, *m)
 			}
 
@@ -68,7 +66,7 @@ func (s *SudokuSolver) Solve() *Board {
 		}
 
 		if !s.state.board.isSolved() {
-			// s.info("Generating moves...")
+			LogDebug(COMPONENT_SUDOKU_SOLVER, "Generating moves...")
 			new_moveGen(s.state).generateMoves()
 			boardHash = 0
 		}
@@ -79,13 +77,17 @@ func (s *SudokuSolver) Solve() *Board {
 }
 
 func (s *SudokuSolver) _doInitValue(b *Board, m *Move) {
-	// fmt.Printf("_doInitValue: %s\n", m.toString())
+	if HasTrace(COMPONENT_SUDOKU_SOLVER) {
+		LogTrace(COMPONENT_SUDOKU_SOLVER, fmt.Sprintf("_doInitValue: %s\n", m.toString()))
+	}
 	b.setFixedValue(int(m.pos), m.value)
 	s.state.addMove(move_setValue(m.pos, m.value, "Initial check"))
 }
 
 func (s *SudokuSolver) _doSetValue(b *Board, m *Move) {
-	// fmt.Printf("_doSetValue: %s\n", m.toString())
+	if HasTrace(COMPONENT_SUDOKU_SOLVER) {
+		LogTrace(COMPONENT_SUDOKU_SOLVER, fmt.Sprintf("_doSetValue: %s\n", m.toString()))
+	}
 	rn := m.getRowNum()
 	s._setClearFloatsTo(b, board_getRowPositions(rn), b.getRowValues(rn), m.value, "clearing "+m.getRowCoord()+" for "+m.getCoords())
 	cn := m.getColNum()
@@ -95,7 +97,9 @@ func (s *SudokuSolver) _doSetValue(b *Board, m *Move) {
 }
 
 func (s *SudokuSolver) _setClearFloatsTo(b *Board, positions []int, cellValues []Cell, value uint8, note string) {
-	// fmt.Printf("SudokuSolver._setClearFloatsTo: pos=%v, value=%d, because %s\n", positions, value, note)
+	if HasTrace(COMPONENT_SUDOKU_SOLVER) {
+		LogTrace(COMPONENT_SUDOKU_SOLVER, fmt.Sprintf("_setClearFloatsTo: pos=%v, value=%d, because %s\n", positions, value, note))
+	}
 
 	for i, cellValue := range cellValues {
 		if !cellValue.isFixed() {
@@ -105,9 +109,13 @@ func (s *SudokuSolver) _setClearFloatsTo(b *Board, positions []int, cellValues [
 }
 
 func (s *SudokuSolver) _setClearFloatTo(b *Board, pos int, c Cell, value uint8, note string) {
-	// fmt.Printf("SudokuSolver._setClearFloatTo: pos=%s, value=%d, because %s\n", board_posToString(pos), value, note)
+	if HasTrace(COMPONENT_SUDOKU_SOLVER) {
+		LogTrace(COMPONENT_SUDOKU_SOLVER, fmt.Sprintf("_setClearFloatTo: pos=%s, value=%d, because %s\n", board_posToString(pos), value, note))
+	}
 	if c.isFloating(value) {
-		// fmt.Printf("_setClearFloatTo: pos=%s, value=%d, because %s\n", board_posToString(pos), value, note)
+		if HasTrace(COMPONENT_SUDOKU_SOLVER) {
+			LogTrace(COMPONENT_SUDOKU_SOLVER, fmt.Sprintf("_setClearFloatTo: pos=%s, value=%d, because %s\n", board_posToString(pos), value, note))
+		}
 		// clear float value
 		newCell := c.clearFloating(value)
 		// check if there is only 1 candidate left
@@ -157,17 +165,5 @@ func (s *SudokuSolver) _checkIfHasOnlyOneFloatingAtPositions(b *Board, value uin
 		var pos = s.state.board.getFirstFloatingValuePosition(value, positions)
 		b.setFixedValue(pos, value)
 		s.state.addMove(move_setValue(uint8(pos), uint8(value), "only one left in "+coord))
-	}
-}
-
-func (s *SudokuSolver) info(msg string) {
-	if s.logInfo {
-		fmt.Println(msg)
-	}
-}
-
-func (s *SudokuSolver) trace(msg string) {
-	if s.logTrace {
-		fmt.Println(msg)
 	}
 }

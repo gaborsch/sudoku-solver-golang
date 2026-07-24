@@ -59,7 +59,7 @@ func new_board() *Board {
 		b.board[i] = cell_INITIAL_VALUE
 	}
 	b.version = 0
-	// fmt.Println("new_board")
+	LogDebug(COMPONENT_BOARD, "new_board")
 	return &b
 }
 
@@ -67,7 +67,7 @@ func clone_board(orig *Board) *Board {
 	var b Board = Board{}
 	b.board = orig.board
 	b.version = orig.version + 1
-	// fmt.Printf("clone_board version %d -> %d\n", orig.version, b.version)
+	LogDebug(COMPONENT_BOARD, fmt.Sprintf("clone_board version %d -> %d\n", orig.version, b.version))
 	return &b
 }
 
@@ -158,14 +158,14 @@ func (b *Board) _writeBoard(pos int, c *Cell) *Cell {
 		if !cellValid {
 			throw(InvalidMoveException{pos, c.bits, []string{fmt.Sprintf("Cell error: %d", errCode)}})
 		}
-		// fmt.Printf("safe_writeBoard(%d): pos=%s, value=%d, cell=%s\n", b.version, board_posToStringShort(pos), c.getValue(), c.toString())
+		LogDebug(COMPONENT_BOARD, fmt.Sprintf("safe_writeBoard(%d): pos=%s, value=%d, cell=%s\n", b.version, board_posToStringShort(pos), c.getValue(), c.toString()))
 		b.board[pos] = *c
 		board_errors := b._isValid()
 		if len(board_errors) > 0 {
 			throw(InvalidMoveException{pos, c.bits, board_errors})
 		}
 	} else {
-		// fmt.Printf("_writeBoard(%d): pos=%s, value=%d, cell=%s\n", b.version, board_posToStringShort(pos), c.getValue(), c.toString())
+		LogDebug(COMPONENT_BOARD, fmt.Sprintf("_writeBoard(%d): pos=%s, value=%d, cell=%s\n", b.version, board_posToStringShort(pos), c.getValue(), c.toString()))
 		b.board[pos] = *c
 	}
 

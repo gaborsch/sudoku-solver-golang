@@ -54,7 +54,7 @@ func (c *Cell) getFixedAsFloatings() uint32 {
 }
 
 func (c *Cell) isFloating(value uint8) bool {
-	// fmt.Printf("isFloating: %d (%018b & %018b = %018b), %t\n", value, c.bits, cell_MASK_FLOATING_BY_VALUE[value], c.bits&cell_MASK_FLOATING_BY_VALUE[value], (c.bits&cell_MASK_FLOATING_BY_VALUE[value]) > 0)
+	LogTrace(COMPONENT_CELL, fmt.Sprintf("isFloating: %d (%018b & %018b = %018b), %t\n", value, c.bits, cell_MASK_FLOATING_BY_VALUE[value], c.bits&cell_MASK_FLOATING_BY_VALUE[value], (c.bits&cell_MASK_FLOATING_BY_VALUE[value]) > 0))
 	return (c.bits & cell_MASK_FLOATING_BY_VALUE[value]) > 0
 }
 
@@ -86,10 +86,10 @@ func cell_setValue(value uint8) *Cell {
 func (c *Cell) clearFloating(value uint8) *Cell {
 	var mask = cell_MASK_FLOATING_BY_VALUE[value]
 	if (c.bits & mask) == 0 {
-		// fmt.Printf("clearFloating1 %08x %08x %t\n", c.bits, mask, (c.bits&mask) == 0)
+		LogTrace(COMPONENT_CELL, fmt.Sprintf("clearFloating1 %08x %08x %t\n", c.bits, mask, (c.bits&mask) == 0))
 		return c
 	}
-	// fmt.Printf("clearFloating2 %08x %08x %08x %t\n", c.bits, (c.bits&^mask)-1, (c.bits&(cell_MASK_ALL^mask))-1, (c.bits&(cell_MASK_ALL^mask))-1 == (c.bits&^mask))
+	LogTrace(COMPONENT_CELL, fmt.Sprintf("clearFloating2 %08x %08x %08x %t\n", c.bits, (c.bits&^mask)-1, (c.bits&(cell_MASK_ALL^mask))-1, (c.bits&(cell_MASK_ALL^mask))-1 == (c.bits&^mask)))
 	return &Cell{(c.bits & (cell_MASK_ALL ^ mask)) - 1}
 }
 
